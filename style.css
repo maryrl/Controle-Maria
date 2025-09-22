@@ -1,1 +1,38 @@
 
+  html, body { height: 100%; }
+    body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+    /* Glass effect cards */
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+    /* Nice focus outline */
+    .focus-ring:focus {
+      outline: 3px solid rgba(99, 102, 241, 0.75);
+      outline-offset: 2px;
+    }
+    /* Print styling: show only #print-area */
+    @media print {
+      body * { visibility: hidden !important; }
+      #print-area, #print-area * { visibility: visible !important; }
+      #print-area { position: absolute; inset: 0; padding: 24px; background: #ffffff !important; color: #111827 !important; }
+      .print-table th, .print-table td { border: 1px solid #e5e7eb; padding: 8px; }
+    }
+    /* Row highlight animation */
+    .flash {
+      animation: flash 1.2s ease-in-out 1;
+    }
+    @keyframes flash {
+      0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.0); }
+      30% { box-shadow: 0 0 0 6px rgba(99,102,241,0.35); }
+      100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.0); }
+    }
+    /* Modal backdrop */
+    .modal-backdrop { background: rgba(0, 0, 0, 0.55); }
+    /* Hide number input arrows (Chrome) */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
