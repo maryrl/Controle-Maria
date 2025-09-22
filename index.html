@@ -1,1 +1,1214 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Produtos e Orçamentos • Canva Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="script.js" defer></script> 
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet"  href="style.css">
+  <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; }
+    body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+    /* Glass effect cards */
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+    /* Nice focus outline */
+    .focus-ring:focus {
+      outline: 3px solid rgba(99, 102, 241, 0.75);
+      outline-offset: 2px;
+    }
+    /* Print styling: show only #print-area */
+    @media print {
+      body * { visibility: hidden !important; }
+      #print-area, #print-area * { visibility: visible !important; }
+      #print-area { position: absolute; inset: 0; padding: 24px; background: #ffffff !important; color: #111827 !important; }
+      .print-table th, .print-table td { border: 1px solid #e5e7eb; padding: 8px; }
+    }
+    /* Row highlight animation */
+    .flash {
+      animation: flash 1.2s ease-in-out 1;
+    }
+    @keyframes flash {
+      0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.0); }
+      30% { box-shadow: 0 0 0 6px rgba(99,102,241,0.35); }
+      100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.0); }
+    }
+    /* Modal backdrop */
+    .modal-backdrop { background: rgba(0, 0, 0, 0.55); }
+    /* Hide number input arrows (Chrome) */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-[#0f1025] via-[#111542] to-[#0b1224] text-slate-100">
+  <div class="max-w-7xl mx-auto px-4 py-6 md:py-10">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center">
+          <!-- Simple logo (SVG) -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7.5C4 6.12 5.12 5 6.5 5h3A2.5 2.5 0 0 1 12 7.5v9A2.5 2.5 0 0 1 9.5 19h-3A2.5 2.5 0 0 1 4 16.5v-9Z" fill="white" opacity="0.9"/>
+            <path d="M12 7.5A2.5 2.5 0 0 1 14.5 5h3A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-3A2.5 2.5 0 0 1 12 16.5v-9Z" fill="white" opacity="0.55"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Suporte de Produtos e Orçamentos</h1>
+          <p class="text-slate-300 text-sm">Cadastre produtos, monte orçamentos e valide informações em um só lugar.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="printCurrentQuoteBtn" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 transition text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
+          Imprimir orçamento
+        </button>
+        <button id="resetAllBtn" class="px-4 py-2 rounded-lg bg-rose-500/90 hover:bg-rose-600 active:bg-rose-700 transition text-white text-sm font-semibold">
+          Limpar tudo (dados locais)
+        </button>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="glass rounded-xl p-2 flex flex-wrap gap-2 mb-6">
+      <button data-tab="tab-produtos" class="tab-btn px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold text-sm">Produtos</button>
+      <button data-tab="tab-orcamentos" class="tab-btn px-4 py-2 rounded-lg hover:bg-white/10 text-slate-200 font-semibold text-sm">Orçamentos</button>
+      <button data-tab="tab-dicionario" class="tab-btn px-4 py-2 rounded-lg hover:bg-white/10 text-slate-200 font-semibold text-sm">Dicionário & Validação</button>
+      <button data-tab="tab-guia" class="tab-btn px-4 py-2 rounded-lg hover:bg-white/10 text-slate-200 font-semibold text-sm">Guia de Orçamentos</button>
+    </nav>
+
+    <!-- Main content -->
+    <main class="space-y-6">
+
+      <!-- Produtos -->
+      <section id="tab-produtos" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form -->
+        <div class="glass rounded-xl p-5 lg:col-span-1">
+          <h2 class="text-lg font-semibold mb-4">Cadastrar produto</h2>
+          <form id="productForm" class="space-y-4">
+            <div>
+              <label for="produtoCodigo" class="block text-sm mb-1">Código do produto</label>
+              <input id="produtoCodigo" type="text" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" placeholder="Ex.: P-001" autocomplete="off" required />
+            </div>
+            <div>
+              <label for="produtoNome" class="block text-sm mb-1">Nome do produto</label>
+              <input id="produtoNome" type="text" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" placeholder="Ex.: Caneca Personalizada" autocomplete="off" required />
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 transition text-white text-sm font-semibold">Salvar produto</button>
+              <button id="productCancelEditBtn" type="button" class="hidden px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-700 active:bg-slate-800 transition text-white text-sm font-semibold">Cancelar edição</button>
+              <button id="productClearFormBtn" type="button" class="ml-auto px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition text-slate-200 text-sm">Limpar</button>
+            </div>
+            <p id="productFormMsg" class="text-sm mt-2"></p>
+          </form>
+        </div>
+
+        <!-- Lista -->
+        <div class="glass rounded-xl p-5 lg:col-span-2">
+          <div class="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+            <h2 class="text-lg font-semibold">Produtos cadastrados</h2>
+            <div class="flex items-center gap-2 md:ml-auto">
+              <div class="relative w-full md:w-72">
+                <input id="productSearch" type="text" placeholder="Pesquisar por código ou nome..." class="focus-ring w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+                <svg class="absolute left-3 top-2.5" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M11 5a6 6 0 1 1-4.24 10.24L5 17l1.76-1.76A6 6 0 0 1 11 5Z" stroke="currentColor" stroke-width="1.6"/>
+                </svg>
+              </div>
+              <button id="exportProductsBtn" class="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 transition text-white text-sm font-semibold">Exportar JSON</button>
+            </div>
+          </div>
+          <div class="overflow-hidden rounded-lg border border-white/10">
+            <table class="min-w-full text-sm">
+              <thead class="bg-white/5">
+                <tr>
+                  <th class="text-left px-4 py-3 font-semibold">Código</th>
+                  <th class="text-left px-4 py-3 font-semibold">Nome</th>
+                  <th class="text-right px-4 py-3 font-semibold">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="productTbody" class="divide-y divide-white/10">
+                <!-- items -->
+              </tbody>
+            </table>
+          </div>
+          <p id="productEmptyState" class="text-slate-400 text-sm mt-3 hidden">Nenhum produto cadastrado ainda.</p>
+        </div>
+      </section>
+
+      <!-- Orçamentos -->
+      <section id="tab-orcamentos" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Editor do orçamento -->
+        <div class="glass rounded-xl p-5 lg:col-span-2">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-lg font-semibold">Editor de orçamento</h2>
+              <p id="quoteStatusBadge" class="text-xs text-slate-300 mt-1">Status: rascunho</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="newQuoteBtn" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-sm">Novo orçamento</button>
+              <button id="saveQuoteBtn" class="px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold">Salvar</button>
+            </div>
+          </div>
+
+          <!-- Dados principais -->
+          <form id="quoteForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm mb-1">Nº do orçamento</label>
+                <input id="quoteNumero" type="text" readonly class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-slate-300" />
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Cliente</label>
+                <input id="quoteCliente" type="text" placeholder="Nome do cliente" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" required />
+              </div>
+              <div>
+                <label class="block text-sm mb-1">Validade</label>
+                <input id="quoteValidade" type="date" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10" required />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm mb-1">Observações</label>
+              <textarea id="quoteObs" rows="2" placeholder="Condições, prazos, frete..." class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400"></textarea>
+            </div>
+
+            <!-- Itens -->
+            <div class="rounded-xl border border-white/10 p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">Itens do orçamento</h3>
+                <button id="openProductPickerBtn" type="button" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs">
+                  Selecionar produto
+                </button>
+              </div>
+
+              <!-- Adicionar item -->
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-3">
+                  <label class="block text-xs mb-1">Código</label>
+                  <input id="itemCodigo" type="text" placeholder="Ex.: P-001" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+                  <p id="itemCodigoHint" class="text-[11px] text-slate-300 mt-1"></p>
+                </div>
+                <div class="md:col-span-4">
+                  <label class="block text-xs mb-1">Nome</label>
+                  <input id="itemNome" type="text" placeholder="Será preenchido pelo código" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs mb-1">Quantidade</label>
+                  <input id="itemQtd" type="number" min="1" step="1" value="1" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs mb-1">Preço unit. (R$)</label>
+                  <input id="itemPreco" type="number" min="0" step="0.01" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10" />
+                </div>
+                <div class="md:col-span-1 flex items-end">
+                  <button id="addItemBtn" type="button" class="w-full px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold">Adicionar</button>
+                </div>
+              </div>
+
+              <!-- Tabela de itens -->
+              <div class="overflow-x-auto rounded-lg border border-white/10">
+                <table class="min-w-full text-sm">
+                  <thead class="bg-white/5">
+                    <tr>
+                      <th class="text-left px-3 py-2 font-semibold">Código</th>
+                      <th class="text-left px-3 py-2 font-semibold">Nome</th>
+                      <th class="text-right px-3 py-2 font-semibold">Qtd</th>
+                      <th class="text-right px-3 py-2 font-semibold">Preço (R$)</th>
+                      <th class="text-right px-3 py-2 font-semibold">Total (R$)</th>
+                      <th class="text-right px-3 py-2 font-semibold">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemsTbody" class="divide-y divide-white/10">
+                    <!-- rows -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Resumo -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs mb-1">Desconto (%)</label>
+                      <input id="quoteDesconto" type="number" min="0" max="100" step="0.01" value="0" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10" />
+                    </div>
+                    <div>
+                      <label class="block text-xs mb-1">Imposto (%)</label>
+                      <input id="quoteImposto" type="number" min="0" max="100" step="0.01" value="0" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10" />
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 pt-1">
+                    <button id="approveQuoteBtn" type="button" class="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold">Marcar como aprovado</button>
+                    <button id="rejectQuoteBtn" type="button" class="px-3 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold">Marcar como rejeitado</button>
+                    <button id="duplicateQuoteBtn" type="button" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-sm">Duplicar</button>
+                  </div>
+                </div>
+                <div class="rounded-lg bg-white/5 p-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Subtotal</span>
+                    <strong id="subtotalLabel">R$ 0,00</strong>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Desconto</span>
+                    <strong id="descontoLabel">- R$ 0,00</strong>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Imposto</span>
+                    <strong id="impostoLabel">+ R$ 0,00</strong>
+                  </div>
+                  <div class="border-t border-white/10 my-2"></div>
+                  <div class="flex items-center justify-between text-lg">
+                    <span class="font-semibold">Total</span>
+                    <span id="totalLabel" class="font-semibold">R$ 0,00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p id="quoteFormMsg" class="text-sm mt-2"></p>
+          </form>
+        </div>
+
+        <!-- Lista de orçamentos -->
+        <div class="glass rounded-xl p-5 lg:col-span-1">
+          <div class="flex items-center gap-2 mb-4">
+            <h2 class="text-lg font-semibold">Meus orçamentos</h2>
+            <div class="relative ml-auto w-40">
+              <input id="quoteSearch" type="text" placeholder="Buscar..." class="focus-ring w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+              <svg class="absolute left-3 top-2.5" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M11 5a6 6 0 1 1-4.24 10.24L5 17l1.76-1.76A6 6 0 0 1 11 5Z" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </div>
+          </div>
+          <ul id="quoteList" class="space-y-2 max-h-[540px] overflow-auto pr-1">
+            <!-- items -->
+          </ul>
+          <p id="quoteEmptyState" class="text-slate-400 text-sm mt-3 hidden">Nenhum orçamento salvo ainda.</p>
+        </div>
+      </section>
+
+      <!-- Dicionário & Validação -->
+      <section id="tab-dicionario" class="hidden space-y-6">
+        <div class="glass rounded-xl p-5">
+          <h2 class="text-lg font-semibold mb-3">Dicionário de dados</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-lg bg-white/5 p-4">
+              <h3 class="font-semibold mb-2">Produtos</h3>
+              <ul class="text-sm space-y-1 text-slate-200">
+                <li>- Código do Produto: identificador único (ex.: P-001)</li>
+                <li>- Nome do Produto: descrição clara do item</li>
+              </ul>
+            </div>
+            <div class="rounded-lg bg-white/5 p-4">
+              <h3 class="font-semibold mb-2">Orçamentos</h3>
+              <ul class="text-sm space-y-1 text-slate-200">
+                <li>- Nº do Orçamento: gerado automaticamente</li>
+                <li>- Cliente: nome de quem recebe o orçamento</li>
+                <li>- Validade: data limite da proposta</li>
+                <li>- Itens: produtos, quantidades e preços unitários</li>
+                <li>- Desconto (%): redução sobre o subtotal</li>
+                <li>- Imposto (%): acréscimo sobre o subtotal após desconto</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-xl p-5">
+          <div class="flex flex-col md:flex-row md:items-center gap-3 mb-3">
+            <h2 class="text-lg font-semibold">Verificação de dados</h2>
+            <button id="runValidationBtn" class="md:ml-auto px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold">Verificar agora</button>
+          </div>
+          <div id="validationResults" class="space-y-2 text-sm">
+            <p class="text-slate-300">Execute a verificação para checar duplicidades, campos vazios e datas vencidas.</p>
+          </div>
+        </div>
+
+        <div class="glass rounded-xl p-5">
+          <div class="flex flex-col md:flex-row md:items-center gap-3 mb-3">
+            <h2 class="text-lg font-semibold">Pesquisar informações</h2>
+            <div class="relative md:ml-auto w-full md:w-96">
+              <input id="dictionarySearch" type="text" placeholder="Busque em produtos, orçamentos e itens..." class="focus-ring w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+              <svg class="absolute left-3 top-2.5" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M11 5a6 6 0 1 1-4.24 10.24L5 17l1.76-1.76A6 6 0 0 1 11 5Z" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </div>
+          </div>
+          <ul id="dictionaryResults" class="space-y-2 text-sm">
+            <li class="text-slate-300">Digite para ver resultados.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Guia -->
+      <section id="tab-guia" class="hidden space-y-4">
+        <div class="glass rounded-xl p-5">
+          <h2 class="text-lg font-semibold mb-3">Como fazer um orçamento</h2>
+          <ol class="list-decimal list-inside space-y-2 text-slate-200 text-sm">
+            <li>Cadastre os produtos com código e nome.</li>
+            <li>Crie um novo orçamento e informe cliente e validade.</li>
+            <li>Adicione itens escolhendo os produtos, quantidades e preços.</li>
+            <li>Ajuste desconto e imposto conforme necessário.</li>
+            <li>Revise o total e salve. Você pode imprimir para enviar ao cliente.</li>
+          </ol>
+        </div>
+        <div class="glass rounded-xl p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <h3 class="font-semibold">Seu guia personalizado</h3>
+            <button id="restoreGuideBtn" class="ml-auto px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-sm">Restaurar padrão</button>
+            <button id="saveGuideBtn" class="px-3 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold">Salvar guia</button>
+          </div>
+          <textarea id="guideText" rows="8" class="focus-ring w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" placeholder="Escreva suas instruções internas, boas práticas e roteiros para montar orçamentos..."></textarea>
+          <p id="guideMsg" class="text-sm mt-2"></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal: Seletor de Produtos -->
+  <div id="productPickerModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative glass rounded-xl p-5 w-[92%] max-w-2xl max-h-[80vh] overflow-hidden">
+      <div class="flex items-center gap-2 mb-3">
+        <h3 class="font-semibold text-lg">Selecionar produto</h3>
+        <button id="closeProductPickerBtn" class="ml-auto px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-sm">Fechar</button>
+      </div>
+      <div class="relative mb-3">
+        <input id="pickerSearch" type="text" placeholder="Buscar por código ou nome..." class="focus-ring w-full pl-9 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 placeholder:text-slate-400" />
+        <svg class="absolute left-3 top-2.5" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M11 5a6 6 0 1 1-4.24 10.24L5 17l1.76-1.76A6 6 0 0 1 11 5Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="overflow-auto rounded-lg border border-white/10 max-h-[55vh]">
+        <table class="min-w-full text-sm">
+          <thead class="bg-white/5">
+            <tr>
+              <th class="text-left px-3 py-2 font-semibold">Código</th>
+              <th class="text-left px-3 py-2 font-semibold">Nome</th>
+              <th class="text-right px-3 py-2 font-semibold">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="pickerTbody" class="divide-y divide-white/10">
+            <!-- rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print area -->
+  <div id="print-area" class="hidden"></div>
+
+  <script>
+    // Utilities
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const fmtBRL = (v) => (isNaN(v) ? 'R$ 0,00' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+    const todayISO = () => new Date().toISOString().slice(0,10);
+    const uuid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+    // Storage
+    const LS = {
+      productsKey: 'cc_products_v1',
+      quotesKey:   'cc_quotes_v1',
+      guideKey:    'cc_guide_v1',
+      counterKey:  'cc_quote_counter_v1',
+      getProducts() { return JSON.parse(localStorage.getItem(this.productsKey) || '[]'); },
+      setProducts(arr) { localStorage.setItem(this.productsKey, JSON.stringify(arr)); },
+      getQuotes() { return JSON.parse(localStorage.getItem(this.quotesKey) || '[]'); },
+      setQuotes(arr) { localStorage.setItem(this.quotesKey, JSON.stringify(arr)); },
+      getGuide() { return localStorage.getItem(this.guideKey) || ''; },
+      setGuide(txt) { localStorage.setItem(this.guideKey, txt || ''); },
+      nextQuoteNumber() {
+        let n = parseInt(localStorage.getItem(this.counterKey) || '0', 10) + 1;
+        localStorage.setItem(this.counterKey, String(n));
+        return n;
+      }
+    };
+
+    // Tabs
+    const tabButtons = $$('.tab-btn');
+    const tabs = ['tab-produtos','tab-orcamentos','tab-dicionario','tab-guia'];
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    function switchTab(id) {
+      tabs.forEach(t => {
+        const el = $('#' + t);
+        if (t === id) { el.classList.remove('hidden'); }
+        else { el.classList.add('hidden'); }
+      });
+      tabButtons.forEach(b => {
+        if (b.dataset.tab === id) {
+          b.classList.add('bg-indigo-500', 'text-white');
+          b.classList.remove('hover:bg-white/10', 'text-slate-200');
+        } else {
+          b.classList.remove('bg-indigo-500', 'text-white');
+          b.classList.add('hover:bg-white/10', 'text-slate-200');
+        }
+      });
+    }
+
+    // State
+    let editProductId = null;
+    let currentQuote = null; // object
+    let productSearchTerm = '';
+    let quoteSearchTerm = '';
+    let dictSearchTerm = '';
+
+    // Products: Render
+    function renderProducts() {
+      const list = LS.getProducts();
+      const tbody = $('#productTbody');
+      tbody.innerHTML = '';
+      const term = productSearchTerm.trim().toLowerCase();
+      const filtered = term ? list.filter(p => (p.codigo || '').toLowerCase().includes(term) || (p.nome || '').toLowerCase().includes(term)) : list;
+      if (filtered.length === 0) {
+        $('#productEmptyState').classList.remove('hidden');
+      } else {
+        $('#productEmptyState').classList.add('hidden');
+      }
+      filtered.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-4 py-2 align-middle">${escapeHtml(p.codigo)}</td>
+          <td class="px-4 py-2 align-middle">${escapeHtml(p.nome)}</td>
+          <td class="px-4 py-2 align-middle text-right">
+            <button data-id="${p.id}" class="editProduct px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs">Editar</button>
+            <button data-id="${p.id}" class="delProduct px-3 py-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white text-xs">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Bind actions
+      $$('.editProduct', tbody).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const prod = LS.getProducts().find(p => p.id === btn.dataset.id);
+          if (!prod) return;
+          editProductId = prod.id;
+          $('#produtoCodigo').value = prod.codigo;
+          $('#produtoNome').value = prod.nome;
+          $('#productFormMsg').textContent = 'Editando produto. Altere e clique em "Salvar produto".';
+          $('#productFormMsg').className = 'text-amber-300 text-sm mt-2';
+          $('#productCancelEditBtn').classList.remove('hidden');
+          switchTab('tab-produtos');
+          highlightRow(btn.closest('tr'));
+        });
+      });
+      $$('.delProduct', tbody).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const listNow = LS.getProducts().filter(p => p.id !== id);
+          LS.setProducts(listNow);
+          // Remove from quotes items referencing missing product? We'll keep items intact but validations will alert.
+          renderProducts();
+          renderPicker(); // update modal
+        });
+      });
+    }
+
+    function highlightRow(el) {
+      el.classList.remove('flash');
+      void el.offsetWidth; // reflow to restart animation
+      el.classList.add('flash');
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    // Products: Handlers
+    $('#productForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const codigo = $('#produtoCodigo').value.trim();
+      const nome = $('#produtoNome').value.trim();
+      const msg = $('#productFormMsg');
+
+      if (!codigo || !nome) {
+        msg.textContent = 'Preencha código e nome.';
+        msg.className = 'text-rose-300 text-sm mt-2';
+        return;
+      }
+      const list = LS.getProducts();
+      const exists = list.some(p => p.codigo.toLowerCase() === codigo.toLowerCase() && p.id !== editProductId);
+      if (exists) {
+        msg.textContent = 'Já existe um produto com este código.';
+        msg.className = 'text-rose-300 text-sm mt-2';
+        return;
+      }
+
+      if (editProductId) {
+        const idx = list.findIndex(p => p.id === editProductId);
+        if (idx >= 0) {
+          list[idx] = { ...list[idx], codigo, nome };
+          LS.setProducts(list);
+          msg.textContent = 'Produto atualizado.';
+          msg.className = 'text-emerald-300 text-sm mt-2';
+        }
+      } else {
+        const novo = { id: uuid(), codigo, nome, criadoEm: Date.now() };
+        list.push(novo);
+        LS.setProducts(list);
+        msg.textContent = 'Produto salvo.';
+        msg.className = 'text-emerald-300 text-sm mt-2';
+      }
+
+      renderProducts();
+      renderPicker();
+      clearProductForm();
+    });
+
+    $('#productCancelEditBtn').addEventListener('click', () => {
+      clearProductForm();
+      $('#productFormMsg').textContent = '';
+    });
+    $('#productClearFormBtn').addEventListener('click', () => {
+      clearProductForm();
+      $('#productFormMsg').textContent = '';
+    });
+
+    function clearProductForm() {
+      editProductId = null;
+      $('#produtoCodigo').value = '';
+      $('#produtoNome').value = '';
+      $('#productCancelEditBtn').classList.add('hidden');
+    }
+
+    $('#productSearch').addEventListener('input', (e) => {
+      productSearchTerm = e.target.value;
+      renderProducts();
+    });
+
+    $('#exportProductsBtn').addEventListener('click', () => {
+      const data = LS.getProducts();
+      downloadJSON(data, 'produtos.json');
+    });
+
+    function downloadJSON(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+    }
+
+    // Product Picker Modal
+    const productPicker = $('#productPickerModal');
+    $('#openProductPickerBtn').addEventListener('click', () => openPicker());
+    $('#closeProductPickerBtn').addEventListener('click', () => closePicker());
+    productPicker.addEventListener('click', (e) => { if (e.target === productPicker) closePicker(); });
+    function openPicker() { productPicker.classList.remove('hidden'); productPicker.classList.add('flex'); $('#pickerSearch').value=''; renderPicker(); $('#pickerSearch').focus(); }
+    function closePicker() { productPicker.classList.add('hidden'); productPicker.classList.remove('flex'); }
+    function renderPicker() {
+      const list = LS.getProducts();
+      const term = ($('#pickerSearch')?.value || '').trim().toLowerCase();
+      const filtered = term ? list.filter(p => p.codigo.toLowerCase().includes(term) || p.nome.toLowerCase().includes(term)) : list;
+      const tbody = $('#pickerTbody');
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="px-3 py-2 text-slate-300" colspan="3">Nenhum produto encontrado.</td>`;
+        tbody.appendChild(tr);
+      } else {
+        filtered.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="px-3 py-2">${escapeHtml(p.codigo)}</td>
+            <td class="px-3 py-2">${escapeHtml(p.nome)}</td>
+            <td class="px-3 py-2 text-right">
+              <button data-id="${p.id}" class="selPick px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs">Selecionar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      $$('.selPick', tbody).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const prod = LS.getProducts().find(p => p.id === btn.dataset.id);
+          if (prod) {
+            $('#itemCodigo').value = prod.codigo;
+            $('#itemNome').value = prod.nome;
+            $('#itemCodigoHint').textContent = '';
+          }
+          closePicker();
+          $('#itemQtd').focus();
+        });
+      });
+    }
+    $('#pickerSearch').addEventListener('input', renderPicker);
+
+    // Orçamentos
+    function newQuote() {
+      currentQuote = {
+        id: uuid(),
+        numero: LS.nextQuoteNumber(),
+        cliente: '',
+        validade: todayISO(),
+        observacoes: '',
+        itens: [],
+        descontoPercent: 0,
+        impostoPercent: 0,
+        status: 'rascunho',
+        criadoEm: Date.now(),
+        atualizadoEm: Date.now()
+      };
+      fillQuoteForm();
+      $('#quoteFormMsg').textContent = 'Novo orçamento criado. Preencha e salve.';
+      $('#quoteFormMsg').className = 'text-emerald-300 text-sm mt-2';
+    }
+
+    function fillQuoteForm() {
+      $('#quoteNumero').value = String(currentQuote.numero);
+      $('#quoteCliente').value = currentQuote.cliente || '';
+      $('#quoteValidade').value = currentQuote.validade || todayISO();
+      $('#quoteObs').value = currentQuote.observacoes || '';
+      $('#quoteDesconto').value = currentQuote.descontoPercent ?? 0;
+      $('#quoteImposto').value = currentQuote.impostoPercent ?? 0;
+      $('#quoteStatusBadge').textContent = 'Status: ' + currentQuote.status;
+      renderItems();
+      recalcTotals();
+    }
+
+    function renderItems() {
+      const tbody = $('#itemsTbody');
+      tbody.innerHTML = '';
+      currentQuote.itens.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2">${escapeHtml(item.codigo)}</td>
+          <td class="px-3 py-2">${escapeHtml(item.nome)}</td>
+          <td class="px-3 py-2 text-right">
+            <input data-id="${item.id}" data-field="qtd" type="number" min="1" step="1" value="${item.quantidade}" class="w-20 text-right px-2 py-1 rounded bg-white/5 border border-white/10">
+          </td>
+          <td class="px-3 py-2 text-right">
+            <input data-id="${item.id}" data-field="preco" type="number" min="0" step="0.01" value="${item.preco}" class="w-28 text-right px-2 py-1 rounded bg-white/5 border border-white/10">
+          </td>
+          <td class="px-3 py-2 text-right">${fmtBRL(item.quantidade * item.preco)}</td>
+          <td class="px-3 py-2 text-right">
+            <button data-id="${item.id}" class="delItem px-3 py-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white text-xs">Remover</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Bind inputs
+      $$('input[data-field]', tbody).forEach(inp => {
+        inp.addEventListener('input', () => {
+          const id = inp.dataset.id;
+          const field = inp.dataset.field;
+          const val = parseFloat(inp.value) || 0;
+          const idx = currentQuote.itens.findIndex(i => i.id === id);
+          if (idx >= 0) {
+            if (field === 'qtd') currentQuote.itens[idx].quantidade = Math.max(1, Math.round(val));
+            if (field === 'preco') currentQuote.itens[idx].preco = Math.max(0, val);
+            renderItems();
+            recalcTotals();
+          }
+        });
+      });
+
+      $$('.delItem', tbody).forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentQuote.itens = currentQuote.itens.filter(i => i.id !== btn.dataset.id);
+          renderItems();
+          recalcTotals();
+        });
+      });
+    }
+
+    // Lookup product by code for item line
+    function lookupProductByCode(code) {
+      const codeNorm = (code || '').trim().toLowerCase();
+      if (!codeNorm) return null;
+      const list = LS.getProducts();
+      return list.find(p => p.codigo.trim().toLowerCase() === codeNorm) || null;
+    }
+
+    $('#itemCodigo').addEventListener('input', (e) => {
+      const code = e.target.value;
+      const prod = lookupProductByCode(code);
+      if (prod) {
+        $('#itemNome').value = prod.nome;
+        $('#itemCodigoHint').textContent = '';
+      } else {
+        $('#itemCodigoHint').textContent = code.trim() ? 'Código não encontrado nos produtos.' : '';
+      }
+    });
+
+    $('#addItemBtn').addEventListener('click', () => {
+      if (!currentQuote) { newQuote(); }
+      const codigo = $('#itemCodigo').value.trim();
+      const nome = $('#itemNome').value.trim();
+      const qtd = Math.max(1, parseInt($('#itemQtd').value || '1', 10));
+      const preco = Math.max(0, parseFloat($('#itemPreco').value || '0'));
+
+      if (!codigo || !nome) {
+        $('#quoteFormMsg').textContent = 'Informe código e nome do item.';
+        $('#quoteFormMsg').className = 'text-rose-300 text-sm mt-2';
+        return;
+      }
+      currentQuote.itens.push({
+        id: uuid(), codigo, nome, quantidade: qtd, preco
+      });
+      $('#itemCodigo').value = '';
+      $('#itemNome').value = '';
+      $('#itemQtd').value = 1;
+      $('#itemPreco').value = '';
+      $('#itemCodigoHint').textContent = '';
+      renderItems();
+      recalcTotals();
+    });
+
+    function recalcTotals() {
+      const subtotal = currentQuote.itens.reduce((acc, i) => acc + (i.quantidade * i.preco), 0);
+      const desconto = subtotal * ((parseFloat($('#quoteDesconto').value || '0') / 100) || 0);
+      const base = subtotal - desconto;
+      const imposto = base * ((parseFloat($('#quoteImposto').value || '0') / 100) || 0);
+      const total = base + imposto;
+
+      $('#subtotalLabel').textContent = fmtBRL(subtotal);
+      $('#descontoLabel').textContent = '- ' + fmtBRL(desconto);
+      $('#impostoLabel').textContent = '+ ' + fmtBRL(imposto);
+      $('#totalLabel').textContent = fmtBRL(total);
+    }
+
+    $('#quoteDesconto').addEventListener('input', recalcTotals);
+    $('#quoteImposto').addEventListener('input', recalcTotals);
+
+    // Save Quote
+    $('#saveQuoteBtn').addEventListener('click', () => {
+      if (!currentQuote) newQuote();
+      // gather
+      currentQuote.cliente = $('#quoteCliente').value.trim();
+      currentQuote.validade = $('#quoteValidade').value || todayISO();
+      currentQuote.observacoes = $('#quoteObs').value.trim();
+      currentQuote.descontoPercent = parseFloat($('#quoteDesconto').value || '0');
+      currentQuote.impostoPercent = parseFloat($('#quoteImposto').value || '0');
+      currentQuote.atualizadoEm = Date.now();
+
+      if (!currentQuote.cliente) {
+        showQuoteMsg('Informe o cliente.', 'error'); return;
+      }
+      if (currentQuote.itens.length === 0) {
+        showQuoteMsg('Adicione pelo menos um item.', 'error'); return;
+      }
+
+      const all = LS.getQuotes();
+      const idx = all.findIndex(q => q.id === currentQuote.id);
+      if (idx >= 0) all[idx] = currentQuote;
+      else all.push(currentQuote);
+      LS.setQuotes(all);
+      showQuoteMsg('Orçamento salvo.', 'ok');
+      renderQuotesList();
+    });
+
+    function showQuoteMsg(text, type) {
+      $('#quoteFormMsg').textContent = text;
+      $('#quoteFormMsg').className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-emerald-300' : 'text-rose-300');
+    }
+
+    // New, Approve, Reject, Duplicate
+    $('#newQuoteBtn').addEventListener('click', () => { newQuote(); });
+    $('#approveQuoteBtn').addEventListener('click', () => {
+      if (!currentQuote) return;
+      currentQuote.status = 'aprovado';
+      $('#quoteStatusBadge').textContent = 'Status: aprovado';
+      showQuoteMsg('Orçamento marcado como aprovado.', 'ok');
+      persistCurrentQuote();
+    });
+    $('#rejectQuoteBtn').addEventListener('click', () => {
+      if (!currentQuote) return;
+      currentQuote.status = 'rejeitado';
+      $('#quoteStatusBadge').textContent = 'Status: rejeitado';
+      showQuoteMsg('Orçamento marcado como rejeitado.', 'ok');
+      persistCurrentQuote();
+    });
+    $('#duplicateQuoteBtn').addEventListener('click', () => {
+      if (!currentQuote) return;
+      const clone = JSON.parse(JSON.stringify(currentQuote));
+      clone.id = uuid();
+      clone.numero = LS.nextQuoteNumber();
+      clone.status = 'rascunho';
+      clone.criadoEm = Date.now();
+      clone.atualizadoEm = Date.now();
+      const all = LS.getQuotes();
+      all.push(clone);
+      LS.setQuotes(all);
+      currentQuote = clone;
+      fillQuoteForm();
+      showQuoteMsg('Orçamento duplicado como novo rascunho.', 'ok');
+      renderQuotesList();
+    });
+
+    function persistCurrentQuote() {
+      currentQuote.atualizadoEm = Date.now();
+      const all = LS.getQuotes();
+      const idx = all.findIndex(q => q.id === currentQuote.id);
+      if (idx >= 0) { all[idx] = currentQuote; LS.setQuotes(all); renderQuotesList(); }
+    }
+
+    // Quotes list
+    function renderQuotesList() {
+      const list = LS.getQuotes();
+      const term = quoteSearchTerm.trim().toLowerCase();
+      const filtered = term ? list.filter(q => String(q.numero).includes(term) || (q.cliente||'').toLowerCase().includes(term)) : list;
+      const ul = $('#quoteList');
+      ul.innerHTML = '';
+      if (filtered.length === 0) {
+        $('#quoteEmptyState').classList.remove('hidden');
+      } else {
+        $('#quoteEmptyState').classList.add('hidden');
+      }
+      filtered.sort((a,b) => b.criadoEm - a.criadoEm).forEach(q => {
+        const total = q.itens.reduce((acc,i)=> acc + i.quantidade*i.preco, 0) * (1 - (q.descontoPercent||0)/100);
+        const li = document.createElement('li');
+        li.className = 'rounded-lg border border-white/10 p-3';
+        li.innerHTML = `
+          <div class="flex items-start gap-2">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold">#${q.numero}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full ${statusPillClass(q.status)}">${q.status}</span>
+                <span class="ml-auto text-xs text-slate-300">${q.cliente ? escapeHtml(q.cliente) : 'Sem cliente'}</span>
+              </div>
+              <div class="text-xs text-slate-300 mt-1">Total aprox.: ${fmtBRL(total)}</div>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center gap-2">
+            <button data-id="${q.id}" class="openQuote px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs">Abrir</button>
+            <button data-id="${q.id}" class="approveQuick px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs">Aprovar</button>
+            <button data-id="${q.id}" class="rejectQuick px-2.5 py-1.5 rounded-lg bg-rose-500/90 hover:bg-rose-600 text-white text-xs">Rejeitar</button>
+            <button data-id="${q.id}" class="delQuote ml-auto px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs">Excluir</button>
+          </div>
+        `;
+        ul.appendChild(li);
+      });
+
+      $$('.openQuote', ul).forEach(btn => btn.addEventListener('click', () => openQuote(btn.dataset.id)));
+      $$('.approveQuick', ul).forEach(btn => btn.addEventListener('click', () => { const q = getQuoteById(btn.dataset.id); if (q){ q.status='aprovado'; saveQuoteObj(q); if(currentQuote&&currentQuote.id===q.id){ currentQuote=q; fillQuoteForm(); } renderQuotesList(); }}));
+      $$('.rejectQuick', ul).forEach(btn => btn.addEventListener('click', () => { const q = getQuoteById(btn.dataset.id); if (q){ q.status='rejeitado'; saveQuoteObj(q); if(currentQuote&&currentQuote.id===q.id){ currentQuote=q; fillQuoteForm(); } renderQuotesList(); }}));
+      $$('.delQuote', ul).forEach(btn => btn.addEventListener('click', () => { const id = btn.dataset.id; const rest = LS.getQuotes().filter(x => x.id !== id); LS.setQuotes(rest); if (currentQuote && currentQuote.id === id) { currentQuote = null; } renderQuotesList(); }));
+    }
+    function statusPillClass(status) {
+      if (status === 'aprovado') return 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+      if (status === 'rejeitado') return 'bg-rose-500/20 text-rose-300 border border-rose-400/30';
+      return 'bg-amber-500/20 text-amber-300 border border-amber-400/30';
+    }
+    function getQuoteById(id) {
+      return LS.getQuotes().find(q => q.id === id) || null;
+    }
+    function saveQuoteObj(q) {
+      const all = LS.getQuotes();
+      const idx = all.findIndex(x => x.id === q.id);
+      if (idx >= 0) { all[idx] = q; LS.setQuotes(all); }
+    }
+    function openQuote(id) {
+      const q = getQuoteById(id);
+      if (!q) return;
+      currentQuote = JSON.parse(JSON.stringify(q));
+      fillQuoteForm();
+      switchTab('tab-orcamentos');
+    }
+
+    $('#quoteSearch').addEventListener('input', (e) => { quoteSearchTerm = e.target.value; renderQuotesList(); });
+
+    // Print current quote
+    $('#printCurrentQuoteBtn').addEventListener('click', () => {
+      if (!currentQuote) {
+        switchTab('tab-orcamentos');
+        showQuoteMsg('Crie ou abra um orçamento para imprimir.', 'error');
+        return;
+      }
+      printQuote(currentQuote);
+    });
+
+    function printQuote(q) {
+      const printEl = $('#print-area');
+      const subtotal = q.itens.reduce((acc, i) => acc + i.quantidade * i.preco, 0);
+      const desconto = subtotal * ((q.descontoPercent || 0)/100);
+      const base = subtotal - desconto;
+      const imposto = base * ((q.impostoPercent || 0)/100);
+      const total = base + imposto;
+      const validadeStr = q.validade ? new Date(q.validade + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+
+      let rows = '';
+      q.itens.forEach((i, idx) => {
+        rows += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${escapeHtml(i.codigo)}</td>
+            <td>${escapeHtml(i.nome)}</td>
+            <td style="text-align:right">${i.quantidade}</td>
+            <td style="text-align:right">${fmtBRL(i.preco)}</td>
+            <td style="text-align:right">${fmtBRL(i.quantidade * i.preco)}</td>
+          </tr>
+        `;
+      });
+
+      printEl.innerHTML = `
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div>
+              <div style="font-size:20px; font-weight:700;">Orçamento #${q.numero}</div>
+              <div style="font-size:12px; color:#374151;">Cliente: ${escapeHtml(q.cliente || '-')}</div>
+              <div style="font-size:12px; color:#374151;">Validade: ${validadeStr || '-'}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:12px; color:#374151;">Status: ${q.status}</div>
+              <div style="font-size:12px; color:#374151;">Emitido em: ${new Date(q.criadoEm).toLocaleDateString('pt-BR')}</div>
+            </div>
+          </div>
+          <table class="print-table" style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+              <tr>
+                <th>#</th><th>Código</th><th>Item</th><th style="text-align:right">Qtd</th><th style="text-align:right">Preço</th><th style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="6">Sem itens.</td></tr>'}</tbody>
+          </table>
+          <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px; max-width:300px; margin-left:auto;">
+            <div style="display:flex; justify-content:space-between;"><span>Subtotal</span><strong>${fmtBRL(subtotal)}</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>Desconto (${q.descontoPercent || 0}%)</span><strong>- ${fmtBRL(desconto)}</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>Imposto (${q.impostoPercent || 0}%)</span><strong>+ ${fmtBRL(imposto)}</strong></div>
+            <hr />
+            <div style="display:flex; justify-content:space-between; font-size:16px;"><span>Total</span><span><strong>${fmtBRL(total)}</strong></span></div>
+          </div>
+          ${q.observacoes ? `<div style="margin-top:12px; font-size:12px;"><strong>Observações:</strong> ${escapeHtml(q.observacoes)}</div>` : ''}
+        </div>
+      `;
+      printEl.classList.remove('hidden');
+      window.print();
+      setTimeout(()=> printEl.classList.add('hidden'), 250);
+    }
+
+    // Validation
+    $('#runValidationBtn').addEventListener('click', () => runValidation());
+    function runValidation() {
+      const products = LS.getProducts();
+      const quotes = LS.getQuotes();
+      const issues = [];
+
+      // Products validations
+      const codes = {};
+      products.forEach(p => {
+        if (!p.codigo || !p.nome) issues.push({ type:'erro', scope:'Produto', message:`Produto com campos vazios (código ou nome).`, detail:`ID ${p.id}` });
+        const key = (p.codigo || '').trim().toLowerCase();
+        if (!key) return;
+        codes[key] = codes[key] ? codes[key] + 1 : 1;
+      });
+      Object.entries(codes).forEach(([code, count]) => {
+        if (count > 1) issues.push({ type:'erro', scope:'Produto', message:`Código duplicado: ${code.toUpperCase()}` });
+      });
+
+      // Quotes validations
+      const now = new Date();
+      quotes.forEach(q => {
+        if (!q.cliente) issues.push({ type:'erro', scope:`Orçamento #${q.numero}`, message:'Cliente não informado.' });
+        if (!q.itens || q.itens.length === 0) issues.push({ type:'erro', scope:`Orçamento #${q.numero}`, message:'Sem itens.' });
+        if (q.validade) {
+          const d = new Date(q.validade + 'T00:00:00');
+          if (d < new Date(now.toDateString())) {
+            issues.push({ type:'aviso', scope:`Orçamento #${q.numero}`, message:'Validade vencida.' });
+          }
+        }
+        (q.itens || []).forEach((i, idx) => {
+          if (!i.codigo || !i.nome) issues.push({ type:'erro', scope:`Orçamento #${q.numero} • Item ${idx+1}`, message:'Item com código/nome vazio.' });
+          const exists = products.some(p => p.codigo.trim().toLowerCase() === (i.codigo||'').trim().toLowerCase());
+          if (!exists) issues.push({ type:'aviso', scope:`Orçamento #${q.numero} • Item ${idx+1}`, message:`Produto não está cadastrado: ${i.codigo || '(sem código)'}` });
+        });
+      });
+
+      const box = $('#validationResults');
+      box.innerHTML = '';
+      if (issues.length === 0) {
+        box.innerHTML = '<p class="text-emerald-300">Tudo certo! Nenhum problema encontrado.</p>';
+        return;
+      }
+
+      const grouped = { erro: [], aviso: [] };
+      issues.forEach(i => grouped[i.type].push(i));
+
+      if (grouped.erro.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'space-y-1';
+        const title = document.createElement('h3');
+        title.className = 'font-semibold text-rose-300 mb-1';
+        title.textContent = `Erros (${grouped.erro.length})`;
+        box.appendChild(title);
+        grouped.erro.forEach(i => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-200 text-xs mr-2">ERRO</span>${escapeHtml(i.scope)} — ${escapeHtml(i.message)}`;
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      }
+
+      if (grouped.aviso.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'space-y-1 mt-3';
+        const title = document.createElement('h3');
+        title.className = 'font-semibold text-amber-300 mb-1';
+        title.textContent = `Avisos (${grouped.aviso.length})`;
+        box.appendChild(title);
+        grouped.aviso.forEach(i => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 text-xs mr-2">AVISO</span>${escapeHtml(i.scope)} — ${escapeHtml(i.message)}`;
+          ul.appendChild(li);
+        });
+        box.appendChild(ul);
+      }
+    }
+
+    // Dictionary Search
+    $('#dictionarySearch').addEventListener('input', (e) => {
+      dictSearchTerm = e.target.value;
+      renderDictionaryResults();
+    });
+
+    function renderDictionaryResults() {
+      const term = (dictSearchTerm || '').trim().toLowerCase();
+      const ul = $('#dictionaryResults');
+      ul.innerHTML = '';
+      if (!term) {
+        ul.innerHTML = '<li class="text-slate-300">Digite para ver resultados.</li>';
+        return;
+      }
+      const prods = LS.getProducts().filter(p =>
+        (p.codigo || '').toLowerCase().includes(term) || (p.nome || '').toLowerCase().includes(term)
+      );
+      const quotes = LS.getQuotes().filter(q =>
+        String(q.numero).includes(term) || (q.cliente || '').toLowerCase().includes(term) ||
+        (q.itens || []).some(i => (i.codigo || '').toLowerCase().includes(term) || (i.nome || '').toLowerCase().includes(term))
+      );
+
+      if (prods.length === 0 && quotes.length === 0) {
+        ul.innerHTML = '<li class="text-slate-300">Nada encontrado.</li>';
+        return;
+      }
+
+      if (prods.length) {
+        const header = document.createElement('li');
+        header.className = 'text-slate-300 mt-2';
+        header.textContent = `Produtos (${prods.length})`;
+        ul.appendChild(header);
+        prods.forEach(p => {
+          const li = document.createElement('li');
+          li.className = 'rounded border border-white/10 p-2 flex items-center gap-2';
+          li.innerHTML = `
+            <div class="flex-1">
+              <div class="text-slate-200 text-sm font-medium">${escapeHtml(p.codigo)} — ${escapeHtml(p.nome)}</div>
+              <div class="text-xs text-slate-400">ID: ${escapeHtml(p.id)}</div>
+            </div>
+            <button class="gotoProduct px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs" data-id="${p.id}">Abrir</button>
+          `;
+          ul.appendChild(li);
+        });
+      }
+
+      if (quotes.length) {
+        const header = document.createElement('li');
+        header.className = 'text-slate-300 mt-3';
+        header.textContent = `Orçamentos (${quotes.length})`;
+        ul.appendChild(header);
+        quotes.forEach(q => {
+          const li = document.createElement('li');
+          li.className = 'rounded border border-white/10 p-2';
+          const itensTxt = (q.itens || []).slice(0, 3).map(i => `${i.codigo} × ${i.quantidade}`).join(', ');
+          li.innerHTML = `
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <div class="text-slate-200 text-sm font-medium">#${q.numero} — ${escapeHtml(q.cliente || 'Sem cliente')}</div>
+                <div class="text-xs text-slate-400">Itens: ${escapeHtml(itensTxt || '—')}</div>
+              </div>
+              <button class="gotoQuote px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 text-xs" data-id="${q.id}">Abrir</button>
+            </div>
+          `;
+          ul.appendChild(li);
+        });
+      }
+
+      // Bind
+      $$('.gotoProduct', ul).forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab('tab-produtos');
+          const row = Array.from($('#productTbody').children).find(tr => tr.querySelector('[data-id="'+btn.dataset.id+'"]'));
+          if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); highlightRow(row); }
+        });
+      });
+      $$('.gotoQuote', ul).forEach(btn => {
+        btn.addEventListener('click', () => {
+          openQuote(btn.dataset.id);
+          switchTab('tab-orcamentos');
+        });
+      });
+    }
+
+    // Guide
+    function loadGuide() {
+      const saved = LS.getGuide();
+      if (saved) $('#guideText').value = saved;
+      else $('#guideText').value = defaultGuideText();
+    }
+    function defaultGuideText() {
+      return [
+        '1) Confirme se todos os produtos necessários estão cadastrados;',
+        '2) Crie um novo orçamento e informe cliente e validade;',
+        '3) Adicione os itens com quantidades e preços atualizados;',
+        '4) Revise descontos, impostos e total final;',
+        '5) Salve e imprima para enviar ao cliente.'
+      ].join('\n');
+    }
+    $('#saveGuideBtn').addEventListener('click', () => {
+      LS.setGuide($('#guideText').value);
+      $('#guideMsg').textContent = 'Guia salvo.';
+      $('#guideMsg').className = 'text-emerald-300 text-sm mt-2';
+      setTimeout(()=> $('#guideMsg').textContent = '', 2000);
+    });
+    $('#restoreGuideBtn').addEventListener('click', () => {
+      $('#guideText').value = defaultGuideText();
+      $('#guideMsg').textContent = 'Guia restaurado.';
+      $('#guideMsg').className = 'text-amber-300 text-sm mt-2';
+      setTimeout(()=> $('#guideMsg').textContent = '', 2000);
+    });
+
+    // Reset all data
+    $('#resetAllBtn').addEventListener('click', () => {
+      if (!confirm('Tem certeza que deseja limpar todos os dados locais?')) return;
+      localStorage.removeItem(LS.productsKey);
+      localStorage.removeItem(LS.quotesKey);
+      localStorage.removeItem(LS.guideKey);
+      localStorage.removeItem(LS.counterKey);
+      editProductId = null; currentQuote = null;
+      renderProducts(); renderQuotesList(); loadGuide(); $('#dictionaryResults').innerHTML = '<li class="text-slate-300">Digite para ver resultados.</li>';
+      $('#quoteForm').reset?.(); $('#productForm').reset?.();
+      $('#productEmptyState').classList.remove('hidden');
+      $('#quoteEmptyState').classList.remove('hidden');
+      $('#quoteFormMsg').textContent = '';
+      $('#productFormMsg').textContent = '';
+      $('#subtotalLabel').textContent = 'R$ 0,00'; $('#descontoLabel').textContent = '- R$ 0,00'; $('#impostoLabel').textContent = '+ R$ 0,00'; $('#totalLabel').textContent = 'R$ 0,00';
+    });
+
+    // Initial load
+    function init() {
+      switchTab('tab-produtos');
+      renderProducts();
+      renderQuotesList();
+      loadGuide();
+      newQuote();
+    }
+    init();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9832af1f36d9f61e',t:'MTc1ODU1MzM1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
